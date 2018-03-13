@@ -1,10 +1,12 @@
 # chiptunes [![Build Status](https://travis-ci.org/lex/chiptunes.svg?branch=master)](https://travis-ci.org/lex/chiptunes)
 
-> A Vue.js project
+> Create and share your chiptunes
+
+[Live](https://lex.github.io/chiptunes/)
 
 ## Build Setup
 
-``` bash
+```bash
 # install dependencies
 npm install
 
