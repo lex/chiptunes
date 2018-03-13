@@ -1,4 +1,4 @@
-# chiptunes
+# chiptunes [![Build Status](https://travis-ci.org/lex/chiptunes.svg?branch=master)](https://travis-ci.org/lex/chiptunes)
 
 > A Vue.js project
 
