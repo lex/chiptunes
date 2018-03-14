@@ -1,4 +1,4 @@
-# chiptunes [![Build Status](https://travis-ci.org/lex/chiptunes.svg?branch=master)](https://travis-ci.org/lex/chiptunes)
+# chiptunes [![Build Status](https://travis-ci.org/lex/chiptunes.svg?branch=master)](https://travis-ci.org/lex/chiptunes) [![Coverage Status](https://coveralls.io/repos/github/lex/chiptunes/badge.svg?branch=master)](https://coveralls.io/github/lex/chiptunes?branch=master)
 
 > Create and share your chiptunes
 

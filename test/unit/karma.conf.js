@@ -13,7 +13,7 @@ module.exports = function karmaConfig(config) {
     // 2. add it to the `browsers` array below.
     browsers: ['ChromeHeadless'],
     frameworks: ['mocha', 'sinon-chai',],
-    reporters: ['spec', 'coverage'],
+    reporters: ['spec', 'coverage', 'coveralls'],
     files: ['./index.js'],
     preprocessors: {
       './index.js': ['webpack', 'sourcemap'],
@@ -23,11 +23,8 @@ module.exports = function karmaConfig(config) {
       noInfo: true,
     },
     coverageReporter: {
+      type: 'lcov',
       dir: './coverage',
-      reporters: [
-        { type: 'lcov', subdir: '.' },
-        { type: 'text-summary' },
-      ],
     },
   });
 };
