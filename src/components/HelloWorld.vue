@@ -3,7 +3,7 @@
     <h1>{{ title }}</h1>
     <div class="tracker-container">
       <div class="np-container">
-        <div v-for="i in channelLength" :key="`header-${i - 1}`" :class="`column-header column-header-${i - 1 === currentPosition ? 'active' : 'inactive'}`">{{(i - 1).toString(16).toUpperCase()}}</div>
+        <div v-for="i in channelLength" :key="`header-${i - 1}`" :class="`column-header column-header-${i - 1 === currentPosition ? 'active' : 'inactive'}`">{{`${(i &lt;= 16) ? '0' : ''}${(i - 1).toString(16).toUpperCase()}`}}</div>
       </div>
       <div class="tracks-container">
         <div class="track-container" v-for="(channel, channelIndex) in channels" :key="channelIndex">
