@@ -10,6 +10,18 @@
           <div v-for="(note, i) in channel" :class="`grid-item grid-item-${note.selected ? 'selected' : 'unselected'}`" :key="i" :id="`${note.channel}:${note.index}`" v-on:click="clicked">{{i}}</div>
         </div>
       </div>
+      <div>
+        <input type="radio" id="lead" value="lead" v-model="picked">
+        <label for="lead">Lead</label>
+        <br>
+        <input type="radio" id="bass" value="bass" v-model="picked">
+        <label for="bass">Bass</label>
+        <br>
+        <input type="radio" id="snare" value="snare" v-model="picked">
+        <label for="snare">Snare</label>
+        <br>
+        <input v-model="note">
+      </div>
     </div>
   </div>
 </template>
@@ -30,6 +42,8 @@ export default {
         this.createChannel(1),
         this.createChannel(2),
       ],
+      picked: 'lead',
+      note: 'C4',
     };
   },
   methods: {
@@ -44,12 +58,28 @@ export default {
       console.log(`toggling - channel: ${channel} slot: ${slot}`);
 
       item.selected = !item.selected;
-      item.note = item.selected ? 'C4' : null;
+      if (item.selected) {
+        // eslint-disable-next-line
+        console.log(`note: ${this.note} instrument: ${this.picked}`);
+        item.note = this.note;
+        item.instrument = this.picked;
+      } else {
+        item.note = null;
+        item.instrument = null;
+      }
     },
     createChannel(channel) {
       // why doesn't this.channelLength work ???
       const channelLength = 30;
-      const note = { note: null, length: null, selected: false, channel };
+
+      const note = {
+        note: null,
+        length: null,
+        selected: false,
+        instrument: null,
+        channel,
+      };
+
       return [...Array(channelLength).keys()].map(index => ({
         ...note,
         index,
@@ -89,11 +119,11 @@ export default {
           const snareNote = this.channels[2][slot];
 
           if (leadNote.note) {
-            leadSynth.triggerAttackRelease('C4', '4n');
+            leadSynth.triggerAttackRelease(leadNote.note, '4n');
           }
 
           if (bassNote.note) {
-            bassSynth.triggerAttackRelease('C2', '4n');
+            bassSynth.triggerAttackRelease(bassNote.note, '4n');
           }
 
           if (snareNote.note) {
@@ -132,7 +162,7 @@ a {
 }
 .tracker-container {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto auto auto;
   width: 40%;
   margin: 0 auto;
   justify-content: center;
