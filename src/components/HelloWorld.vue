@@ -21,6 +21,8 @@
         <label for="snare">Snare</label>
         <br>
         <input v-model="note">
+        <br>
+        <input v-model="songAsJson">
       </div>
     </div>
   </div>
@@ -135,6 +137,16 @@ export default {
       ).start();
 
       Tone.Transport.start();
+    },
+  },
+  computed: {
+    songAsJson: {
+      get() {
+        return JSON.stringify(this.channels);
+      },
+      set(newSong) {
+        this.channels = JSON.parse(newSong);
+      },
     },
   },
   created() {
