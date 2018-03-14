@@ -7,7 +7,7 @@
       </div>
       <div class="tracks-container">
         <div class="track-container" v-for="(channel, channelIndex) in channels" :key="channelIndex">
-          <div v-for="(note, i) in channel" :class="`grid-item grid-item-${note.selected ? 'selected' : 'unselected'}`" :key="i" :id="`${note.channel}:${note.index}`" v-on:click="clicked">{{i}}</div>
+          <div v-for="(note, i) in channel" :class="`grid-item grid-item-${note.selected ? 'selected' : 'unselected'}`" :key="i" :id="`${note.channel}:${note.index}`" v-on:click="clicked">{{note.selected ? note.note : ''}}</div>
         </div>
       </div>
       <div>
