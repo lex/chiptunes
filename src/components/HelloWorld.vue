@@ -116,21 +116,27 @@ export default {
               ? 0
               : this.currentPosition + 1;
 
-          const leadNote = this.channels[0][slot];
-          const bassNote = this.channels[1][slot];
-          const snareNote = this.channels[2][slot];
+          const notes = [
+            this.channels[0][slot],
+            this.channels[1][slot],
+            this.channels[2][slot],
+          ];
 
-          if (leadNote.note) {
-            leadSynth.triggerAttackRelease(leadNote.note, '4n');
-          }
-
-          if (bassNote.note) {
-            bassSynth.triggerAttackRelease(bassNote.note, '4n');
-          }
-
-          if (snareNote.note) {
-            snareSynth.triggerAttackRelease();
-          }
+          notes.forEach(note => {
+            switch (note.instrument) {
+              case 'lead':
+                leadSynth.triggerAttackRelease(note.note, '4n');
+                break;
+              case 'bass':
+                bassSynth.triggerAttackRelease(note.note, '4n');
+                break;
+              case 'snare':
+                snareSynth.triggerAttackRelease();
+                break;
+              default:
+                break;
+            }
+          });
         },
         slots,
         '4n',
