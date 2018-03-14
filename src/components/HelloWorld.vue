@@ -1,9 +1,15 @@
 <template>
   <div>
     <h1>{{ title }}</h1>
-    <div class="grid-container">
-      <div v-for="i in channelLength" :key="`header-${i - 1}`" :class="`column-header-${i - 1 === currentPosition ? 'active' : 'inactive'}`">{{i - 1}}</div>
-      <div v-for="(note, i) in channels.reduce((a, b) => a.concat(b), [])" :class="`grid-item grid-item-${note.selected ? 'selected' : 'unselected'}`" :key="i" :id="i" v-on:click="clicked">{{i}}</div>
+    <div class="tracker-container">
+      <div class="np-container">
+        <div v-for="i in channelLength" :key="`header-${i - 1}`" :class="`column-header column-header-${i - 1 === currentPosition ? 'active' : 'inactive'}`">{{(i - 1).toString(16).toUpperCase()}}</div>
+      </div>
+      <div class="tracks-container">
+        <div class="track-container" v-for="(channel, channelIndex) in channels" :key="channelIndex">
+          <div v-for="(note, i) in channel" :class="`grid-item grid-item-${note.selected ? 'selected' : 'unselected'}`" :key="i" :id="`${note.channel}:${note.index}`" v-on:click="clicked">{{i}}</div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -16,31 +22,38 @@ export default {
   data() {
     return {
       title: 'Chiptunes',
-      channelLength: 16,
+      channelLength: 30,
       currentPosition: -1,
       tileColor: 'orange',
       channels: [
-        this.createChannel(),
-        this.createChannel(),
-        this.createChannel(),
+        this.createChannel(0),
+        this.createChannel(1),
+        this.createChannel(2),
       ],
     };
   },
   methods: {
     clicked(e) {
       const id = e.target.id;
-      const channel = Math.floor(id / this.channelLength);
-      const slot = Math.floor(id - channel * this.channelLength);
+      const split = id.split(':');
+      const channel = split[0];
+      const slot = split[1];
       const item = this.channels[channel][slot];
+
+      // eslint-disable-next-line
+      console.log(`toggling - channel: ${channel} slot: ${slot}`);
 
       item.selected = !item.selected;
       item.note = item.selected ? 'C4' : null;
     },
-    createChannel() {
+    createChannel(channel) {
       // why doesn't this.channelLength work ???
-      const channelLength = 16;
-      const note = { note: null, length: null, selected: false };
-      return [...Array(channelLength).keys()].map(() => ({ ...note }));
+      const channelLength = 30;
+      const note = { note: null, length: null, selected: false, channel };
+      return [...Array(channelLength).keys()].map(index => ({
+        ...note,
+        index,
+      }));
     },
     play() {
       const leadSynth = new Tone.Synth({
@@ -117,20 +130,42 @@ li {
 a {
   color: #42b983;
 }
-.grid-container {
+.tracker-container {
   display: grid;
-  grid-template-columns: auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto;
-  grid-gap: 10px;
+  grid-template-columns: auto auto;
+  width: 40%;
+  margin: 0 auto;
+  justify-content: center;
+}
+.np-container {
+  display: grid;
+  grid-template-columns: auto;
+  grid-gap: 5px;
   padding: 10px;
   grid-auto-rows: 1fr;
-  width: 80%;
-  margin: 0 auto;
+  justify-content: center;
+}
+.track-container {
+  display: grid;
+  grid-template-columns: auto;
+  grid-gap: 5px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 2px;
+  padding-right: 2px;
+  grid-auto-rows: 1fr;
+  justify-content: center;
+}
+.tracks-container {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-auto-rows: 1fr;
   justify-content: center;
 }
 .grid-item {
   background-color: orange;
-  border: 1px solid black;
-  height: 50px;
+  border: 1px solid rgb(255, 255, 255);
+  height: 20px;
   width: 50px;
 }
 .grid-item-selected {
@@ -138,6 +173,11 @@ a {
 }
 .grid-item-unselected {
   background-color: rgba(255, 153, 0, 0.5);
+}
+.column-header {
+  border: 1px solid rgb(255, 255, 255);
+  height: 20px;
+  width: 50px;
 }
 .column-header-active {
   background-color: green;
