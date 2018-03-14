@@ -87,16 +87,13 @@ export default {
         index,
       }));
     },
-    play() {
-      const leadSynth = new Tone.Synth({
+    createLeadSynth() {
+      return new Tone.Synth({
         oscillator: { type: 'triangle' },
       }).toMaster();
-
-      const bassSynth = new Tone.Synth({
-        oscillator: { type: 'triangle' },
-      }).toMaster();
-
-      const snareSynth = new Tone.NoiseSynth({
+    },
+    createSnareSynth() {
+      return new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: {
           attack: 0.005,
@@ -105,6 +102,25 @@ export default {
         },
         volume: -8,
       }).toMaster();
+    },
+    play() {
+      const channelSynths = {
+        channel0: {
+          lead: this.createLeadSynth(),
+          bass: this.createLeadSynth(),
+          snare: this.createSnareSynth(),
+        },
+        channel1: {
+          lead: this.createLeadSynth(),
+          bass: this.createLeadSynth(),
+          snare: this.createSnareSynth(),
+        },
+        channel2: {
+          lead: this.createLeadSynth(),
+          bass: this.createLeadSynth(),
+          snare: this.createSnareSynth(),
+        },
+      };
 
       const slots = [...Array(this.channelLength).keys()];
 
@@ -116,6 +132,7 @@ export default {
               ? 0
               : this.currentPosition + 1;
 
+          // what is this and why
           const notes = [
             this.channels[0][slot],
             this.channels[1][slot],
@@ -123,15 +140,17 @@ export default {
           ];
 
           notes.forEach(note => {
+            const synths = channelSynths[`channel${note.channel}`];
+
             switch (note.instrument) {
               case 'lead':
-                leadSynth.triggerAttackRelease(note.note, '4n');
+                synths.lead.triggerAttackRelease(note.note, '4n');
                 break;
               case 'bass':
-                bassSynth.triggerAttackRelease(note.note, '4n');
+                synths.bass.triggerAttackRelease(note.note, '4n');
                 break;
               case 'snare':
-                snareSynth.triggerAttackRelease();
+                synths.snare.triggerAttackRelease();
                 break;
               default:
                 break;
