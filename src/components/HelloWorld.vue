@@ -23,6 +23,10 @@
         <input v-model="note">
         <br>
         <input v-model="songAsJson">
+        <br>
+        <button v-on:click="play">Play</button>
+        <br>
+        <button v-on:click="stop">Stop</button>
       </div>
     </div>
   </div>
@@ -31,21 +35,25 @@
 <script>
 import Tone from 'tone';
 
+const initialChannelLength = 20;
+
 export default {
   name: 'HelloWorld',
   data() {
     return {
       title: 'Chiptunes',
-      channelLength: 30,
+      channelLength: initialChannelLength,
       currentPosition: -1,
       tileColor: 'orange',
       channels: [
-        this.createChannel(0),
-        this.createChannel(1),
-        this.createChannel(2),
+        this.createChannel(0, initialChannelLength),
+        this.createChannel(1, initialChannelLength),
+        this.createChannel(2, initialChannelLength),
       ],
       picked: 'lead',
       note: 'C4',
+      loop: null,
+      channelSynths: null,
     };
   },
   methods: {
@@ -70,10 +78,7 @@ export default {
         item.instrument = null;
       }
     },
-    createChannel(channel) {
-      // why doesn't this.channelLength work ???
-      const channelLength = 30;
-
+    createChannel(channel, channelLength) {
       const note = {
         note: null,
         length: null,
@@ -103,8 +108,8 @@ export default {
         volume: -8,
       }).toMaster();
     },
-    play() {
-      const channelSynths = {
+    createChannelSynths() {
+      this.channelSynths = {
         channel0: {
           lead: this.createLeadSynth(),
           bass: this.createLeadSynth(),
@@ -121,11 +126,12 @@ export default {
           snare: this.createSnareSynth(),
         },
       };
-
+    },
+    play() {
       const slots = [...Array(this.channelLength).keys()];
 
       // eslint-disable-next-line
-      const loop = new Tone.Sequence(
+      this.loop = new Tone.Sequence(
         (time, slot) => {
           this.currentPosition =
             this.currentPosition === this.channelLength - 1
@@ -140,7 +146,7 @@ export default {
           ];
 
           notes.forEach(note => {
-            const synths = channelSynths[`channel${note.channel}`];
+            const synths = this.channelSynths[`channel${note.channel}`];
 
             switch (note.instrument) {
               case 'lead':
@@ -163,6 +169,11 @@ export default {
 
       Tone.Transport.start();
     },
+    stop() {
+      Tone.Transport.stop();
+      this.loop.dispose();
+      this.currentPosition = 0;
+    },
   },
   computed: {
     songAsJson: {
@@ -175,7 +186,7 @@ export default {
     },
   },
   created() {
-    this.play();
+    this.createChannelSynths();
   },
 };
 </script>
