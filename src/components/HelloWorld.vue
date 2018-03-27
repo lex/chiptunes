@@ -32,6 +32,9 @@
         <input type="text" id="noteLength" v-model="noteLength">
         <label for="noteLength">Length</label>
         <br>
+        <input type="text" id="bpm" v-model="song.bpm">
+        <label for="bpm">BPM</label>
+        <br>
         <input type="text" id="json" v-model="songAsJson">
         <label for="json">JSON</label>
         <br>
@@ -66,6 +69,7 @@ export default {
       song: {
         title: null,
         author: null,
+        bpm: Tone.Transport.bpm.value,
         tracks: [this.createTrack()],
       },
       selectedWaveform: 'sine',
@@ -237,6 +241,14 @@ export default {
     },
     currentTrackLength() {
       return this.song.tracks[this.currentTrack][0].length;
+    },
+    songBpm() {
+      return this.song.bpm;
+    },
+  },
+  watch: {
+    songBpm(newBpm) {
+      Tone.Transport.bpm.value = newBpm;
     },
   },
   created() {
