@@ -11,18 +11,29 @@
         </div>
       </div>
       <div>
-        <input type="radio" id="lead" value="lead" v-model="picked">
-        <label for="lead">Lead</label>
+        <input type="radio" id="sine" value="sine" v-model="selectedWaveform">
+        <label for="sine">Sine</label>
         <br>
-        <input type="radio" id="bass" value="bass" v-model="picked">
-        <label for="bass">Bass</label>
+        <input type="radio" id="square" value="square" v-model="selectedWaveform">
+        <label for="square">Square</label>
         <br>
-        <input type="radio" id="snare" value="snare" v-model="picked">
+        <input type="radio" id="triangle" value="triangle" v-model="selectedWaveform">
+        <label for="triangle">Triangle</label>
+        <br>
+        <input type="radio" id="sawtooth" value="sawtooth" v-model="selectedWaveform">
+        <label for="sawtooth">Sawtooth</label>
+        <br>
+        <input type="radio" id="snare" value="snare" v-model="selectedWaveform">
         <label for="snare">Snare</label>
         <br>
-        <input v-model="note">
+        <input type="text" id="note" v-model="note">
+        <label for="note">Note</label>
         <br>
-        <input v-model="songAsJson">
+        <input type="text" id="noteLength" v-model="noteLength">
+        <label for="noteLength">Length</label>
+        <br>
+        <input type="text" id="json" v-model="songAsJson">
+        <label for="json">JSON</label>
         <br>
         <button v-on:click="play">Play</button>
         <br>
@@ -36,6 +47,7 @@
 import Tone from 'tone';
 
 const initialChannelLength = 20;
+const waveforms = ['sine', 'square', 'triangle', 'sawtooth'];
 
 export default {
   name: 'HelloWorld',
@@ -50,8 +62,9 @@ export default {
         this.createChannel(1, initialChannelLength),
         this.createChannel(2, initialChannelLength),
       ],
-      picked: 'lead',
+      selectedWaveform: 'sine',
       note: 'C4',
+      noteLength: '4n',
       loop: null,
       channelSynths: null,
     };
@@ -70,19 +83,20 @@ export default {
       item.selected = !item.selected;
       if (item.selected) {
         // eslint-disable-next-line
-        console.log(`note: ${this.note} instrument: ${this.picked}`);
+        console.log(`note: ${this.note} instrument: ${this.selectedWaveform}`);
         item.note = this.note;
-        item.instrument = this.picked;
+        item.instrument = this.selectedWaveform;
+        item.length = this.noteLength;
       } else {
         item.note = null;
         item.instrument = null;
+        item.length = null;
       }
     },
     createChannel(channel, channelLength) {
       const note = {
         note: null,
         length: null,
-        selected: false,
         instrument: null,
         channel,
       };
@@ -92,9 +106,9 @@ export default {
         index,
       }));
     },
-    createLeadSynth() {
+    createSynth(type) {
       return new Tone.Synth({
-        oscillator: { type: 'triangle' },
+        oscillator: { type },
       }).toMaster();
     },
     createSnareSynth() {
@@ -108,23 +122,20 @@ export default {
         volume: -8,
       }).toMaster();
     },
+    createSynths() {
+      const synths = waveforms.reduce((s, o) => {
+        // eslint-disable-next-line
+        s[o] = this.createSynth(o);
+        return s;
+      }, {});
+      synths.snare = this.createSnareSynth();
+      return synths;
+    },
     createChannelSynths() {
       this.channelSynths = {
-        channel0: {
-          lead: this.createLeadSynth(),
-          bass: this.createLeadSynth(),
-          snare: this.createSnareSynth(),
-        },
-        channel1: {
-          lead: this.createLeadSynth(),
-          bass: this.createLeadSynth(),
-          snare: this.createSnareSynth(),
-        },
-        channel2: {
-          lead: this.createLeadSynth(),
-          bass: this.createLeadSynth(),
-          snare: this.createSnareSynth(),
-        },
+        channel0: this.createSynths(),
+        channel1: this.createSynths(),
+        channel2: this.createSynths(),
       };
     },
     play() {
@@ -149,16 +160,16 @@ export default {
             const synths = this.channelSynths[`channel${note.channel}`];
 
             switch (note.instrument) {
-              case 'lead':
-                synths.lead.triggerAttackRelease(note.note, '4n');
-                break;
-              case 'bass':
-                synths.bass.triggerAttackRelease(note.note, '4n');
+              case null:
                 break;
               case 'snare':
                 synths.snare.triggerAttackRelease();
                 break;
               default:
+                synths[note.instrument].triggerAttackRelease(
+                  note.note,
+                  note.length,
+                );
                 break;
             }
           });
@@ -171,8 +182,11 @@ export default {
     },
     stop() {
       Tone.Transport.stop();
-      this.loop.dispose();
-      this.currentPosition = 0;
+      this.currentPosition = -1;
+      if (this.loop !== null) {
+        this.loop.dispose();
+        this.loop = null;
+      }
     },
   },
   computed: {
