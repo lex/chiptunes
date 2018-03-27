@@ -3,11 +3,11 @@
     <h1>{{ title }}</h1>
     <div class="tracker-container">
       <div class="np-container">
-        <div v-for="i in channelLength" :key="`header-${i - 1}`" :class="`column-header column-header-${i - 1 === currentPosition ? 'active' : 'inactive'}`">{{`${(i &lt;= 16) ? '0' : ''}${(i - 1).toString(16).toUpperCase()}`}}</div>
+        <div v-for="i in currentTrackLength" :key="`header-${i - 1}`" :class="`column-header column-header-${i - 1 === currentPosition ? 'active' : 'inactive'}`">{{`${(i &lt;= 16) ? '0' : ''}${(i - 1).toString(16).toUpperCase()}`}}</div>
       </div>
       <div class="tracks-container">
-        <div class="track-container" v-for="(channel, channelIndex) in channels" :key="channelIndex">
-          <div v-for="(note, i) in channel" :class="`grid-item grid-item-${note.selected ? 'selected' : 'unselected'}`" :key="i" :id="`${note.channel}:${note.index}`" v-on:click="clicked">{{note.selected ? note.note : ''}}</div>
+        <div class="track-container" v-for="(channel, channelIndex) in channelsForCurrentTrack" :key="channelIndex">
+          <div v-for="(note, i) in channel" :class="`grid-item grid-item-${note.note ? 'selected' : 'unselected'}`" :key="i" :id="`${note.channel}:${note.index}`" v-on:click="clicked">{{note.selected ? note.note : ''}}</div>
         </div>
       </div>
       <div>
@@ -38,6 +38,11 @@
         <button v-on:click="play">Play</button>
         <br>
         <button v-on:click="stop">Stop</button>
+        <br>
+        <button v-on:click="addTrack">Add track</button>
+        <div>
+          <button v-for="(track, i) in song.tracks" :key="i" :id="i" v-on:click="selectTrack">{{ i }}</button>
+        </div>
       </div>
     </div>
   </div>
@@ -46,7 +51,7 @@
 <script>
 import Tone from 'tone';
 
-const initialChannelLength = 20;
+const initialTrackLength = 30;
 const waveforms = ['sine', 'square', 'triangle', 'sawtooth'];
 
 export default {
@@ -54,14 +59,15 @@ export default {
   data() {
     return {
       title: 'Chiptunes',
-      channelLength: initialChannelLength,
+      trackLength: initialTrackLength,
       currentPosition: -1,
+      currentTrack: 0,
       tileColor: 'orange',
-      channels: [
-        this.createChannel(0, initialChannelLength),
-        this.createChannel(1, initialChannelLength),
-        this.createChannel(2, initialChannelLength),
-      ],
+      song: {
+        title: null,
+        author: null,
+        tracks: [this.createTrack()],
+      },
       selectedWaveform: 'sine',
       note: 'C4',
       noteLength: '4n',
@@ -73,12 +79,15 @@ export default {
     clicked(e) {
       const id = e.target.id;
       const split = id.split(':');
+      const track = this.currentTrack;
       const channel = split[0];
       const slot = split[1];
-      const item = this.channels[channel][slot];
+      const item = this.song.tracks[track][channel][slot];
 
       // eslint-disable-next-line
-      console.log(`toggling - channel: ${channel} slot: ${slot}`);
+      console.log(
+        `toggling - track: ${track} channel: ${channel} slot: ${slot}`,
+      );
 
       item.selected = !item.selected;
       if (item.selected) {
@@ -93,7 +102,18 @@ export default {
         item.length = null;
       }
     },
-    createChannel(channel, channelLength) {
+    selectTrack(e) {
+      const trackIndex = e.target.id;
+      this.currentTrack = Number(trackIndex);
+    },
+    createTrack() {
+      return [
+        this.createChannel(0, initialTrackLength),
+        this.createChannel(1, initialTrackLength),
+        this.createChannel(2, initialTrackLength),
+      ];
+    },
+    createChannel(channel, trackLength) {
       const note = {
         note: null,
         length: null,
@@ -101,7 +121,7 @@ export default {
         channel,
       };
 
-      return [...Array(channelLength).keys()].map(index => ({
+      return [...Array(trackLength).keys()].map(index => ({
         ...note,
         index,
       }));
@@ -139,21 +159,31 @@ export default {
       };
     },
     play() {
-      const slots = [...Array(this.channelLength).keys()];
-
-      // eslint-disable-next-line
+      // const slots = [...Array(this.trackLength).keys()];
+      const slots = [0];
       this.loop = new Tone.Sequence(
-        (time, slot) => {
+        () => {
+          // if we're at the end of the track
+          if (this.currentPosition === this.currentTrackLength - 1) {
+            this.currentTrack =
+              this.currentTrack === this.song.tracks.length - 1
+                ? 0
+                : this.currentTrack + 1;
+          }
+
+          // change position in track
           this.currentPosition =
-            this.currentPosition === this.channelLength - 1
+            this.currentPosition === this.currentTrackLength - 1
               ? 0
               : this.currentPosition + 1;
 
+          const channels = this.channelsForCurrentTrack;
+
           // what is this and why
           const notes = [
-            this.channels[0][slot],
-            this.channels[1][slot],
-            this.channels[2][slot],
+            channels[0][this.currentPosition],
+            channels[1][this.currentPosition],
+            channels[2][this.currentPosition],
           ];
 
           notes.forEach(note => {
@@ -183,20 +213,30 @@ export default {
     stop() {
       Tone.Transport.stop();
       this.currentPosition = -1;
+
       if (this.loop !== null) {
         this.loop.dispose();
         this.loop = null;
       }
     },
+    addTrack() {
+      this.song.tracks.push(this.createTrack());
+    },
   },
   computed: {
     songAsJson: {
       get() {
-        return JSON.stringify(this.channels);
+        return JSON.stringify(this.song);
       },
       set(newSong) {
-        this.channels = JSON.parse(newSong);
+        this.song = JSON.parse(newSong);
       },
+    },
+    channelsForCurrentTrack() {
+      return this.song.tracks[this.currentTrack];
+    },
+    currentTrackLength() {
+      return this.song.tracks[this.currentTrack][0].length;
     },
   },
   created() {
