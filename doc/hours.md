@@ -6,5 +6,5 @@
 | 2018-03-13 |           2           |                   made a hello world song in vue, made tests work, set up automatic deploying                   |
 | 2018-03-14 |           4           |                  adventures with canvases, settled on a simple css grid for the mvp of the mvp                  |
 | 2018-03-14 |           2           | flip the view to a vertical one, add support for selecting instruments, notes, importing and exporting the song |
-| 2018-03-27 |           2           |                                 add support for multiple tracks, refactor stuff                                 |
-|   total    |          12           |                                                                                                                 |
+| 2018-03-27 |           4           |                  add support for multiple tracks, refactor stuff, variable track lengths, bpm                   |
+|   total    |          14           |                                                                                                                 |

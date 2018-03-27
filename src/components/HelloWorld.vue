@@ -7,7 +7,7 @@
       </div>
       <div class="tracks-container">
         <div class="track-container" v-for="(channel, channelIndex) in channelsForCurrentTrack" :key="channelIndex">
-          <div v-for="(note, i) in channel" :class="`grid-item grid-item-${note.note ? 'selected' : 'unselected'}`" :key="i" :id="`${note.channel}:${note.index}`" v-on:click="clicked">{{note.selected ? note.note : ''}}</div>
+          <div v-for="(note, i) in channel" :class="`grid-item grid-item-${note.note ? 'selected' : 'unselected'}`" :key="i" :id="`${note.channel}:${note.index}`" v-on:click="clicked">{{note.note ? note.note : ''}}</div>
         </div>
       </div>
       <div>
@@ -46,6 +46,9 @@
         <div>
           <button v-for="(track, i) in song.tracks" :key="i" :id="i" v-on:click="selectTrack">{{ i }}</button>
         </div>
+        <button v-on:click="increaseTrackLength">Increase track length</button>
+        <br>
+        <button v-on:click="decreaseTrackLength">Decrease track length</button>
       </div>
     </div>
   </div>
@@ -54,7 +57,7 @@
 <script>
 import Tone from 'tone';
 
-const initialTrackLength = 30;
+const initialTrackLength = 16;
 const waveforms = ['sine', 'square', 'triangle', 'sawtooth'];
 
 export default {
@@ -93,8 +96,7 @@ export default {
         `toggling - track: ${track} channel: ${channel} slot: ${slot}`,
       );
 
-      item.selected = !item.selected;
-      if (item.selected) {
+      if (!item.note) {
         // eslint-disable-next-line
         console.log(`note: ${this.note} instrument: ${this.selectedWaveform}`);
         item.note = this.note;
@@ -117,18 +119,19 @@ export default {
         this.createChannel(2, initialTrackLength),
       ];
     },
-    createChannel(channel, trackLength) {
-      const note = {
+    createNote(channel, index) {
+      return {
         note: null,
         length: null,
         instrument: null,
         channel,
-      };
-
-      return [...Array(trackLength).keys()].map(index => ({
-        ...note,
         index,
-      }));
+      };
+    },
+    createChannel(channel, trackLength) {
+      return [...Array(trackLength).keys()].map(index =>
+        this.createNote(channel, index),
+      );
     },
     createSynth(type) {
       return new Tone.Synth({
@@ -173,13 +176,14 @@ export default {
               this.currentTrack === this.song.tracks.length - 1
                 ? 0
                 : this.currentTrack + 1;
+            this.currentPosition = 0;
+          } else {
+            // change position in track
+            this.currentPosition =
+              this.currentPosition === this.currentTrackLength - 1
+                ? 0
+                : this.currentPosition + 1;
           }
-
-          // change position in track
-          this.currentPosition =
-            this.currentPosition === this.currentTrackLength - 1
-              ? 0
-              : this.currentPosition + 1;
 
           const channels = this.channelsForCurrentTrack;
 
@@ -225,6 +229,16 @@ export default {
     },
     addTrack() {
       this.song.tracks.push(this.createTrack());
+    },
+    increaseTrackLength() {
+      const channels = this.channelsForCurrentTrack;
+      channels.forEach((channel, index) =>
+        channel.push(this.createNote(index, channel.length)),
+      );
+    },
+    decreaseTrackLength() {
+      const channels = this.channelsForCurrentTrack;
+      channels.forEach(channel => channel.pop());
     },
   },
   computed: {
