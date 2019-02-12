@@ -166,7 +166,10 @@ export default {
       };
     },
     play() {
-      // const slots = [...Array(this.trackLength).keys()];
+      if (Tone.context.state !== 'running') {
+        Tone.context.resume();
+      }
+
       const slots = [0];
       this.loop = new Tone.Sequence(
         () => {
